@@ -18,7 +18,6 @@ from time import time
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall, deferLater
-from twisted.python.threadable import isInIOThread
 
 from .authentication import NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
 from .bloomfilter import BloomFilter
@@ -126,7 +125,6 @@ class Community(TaskManager):
         assert isinstance(my_member, Member), type(my_member)
         assert my_member.public_key, my_member.database_id
         assert my_member.private_key, my_member.database_id
-        assert isInIOThread()
         master = dispersy.get_new_member(u"high")
 
         # new community instance
@@ -175,7 +173,6 @@ class Community(TaskManager):
     def get_master_members(cls, dispersy):
         from .dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
-        assert isInIOThread()
         logger.debug("retrieving all master members owning %s communities", cls.get_classification())
         execute = dispersy.database.execute
         return [dispersy.get_member(public_key=str(public_key)) if public_key else dispersy.get_member(mid=str(mid))
@@ -216,7 +213,6 @@ class Community(TaskManager):
         assert isinstance(my_member, Member), type(my_member)
         assert my_member.public_key, my_member.database_id
         assert my_member.private_key, my_member.database_id
-        assert isInIOThread()
 
         # new community instance
         community = cls(dispersy, master, my_member)
@@ -241,7 +237,6 @@ class Community(TaskManager):
         @param my_member: The my member that identifies you in this community.
         @type my_member: Member
         """
-        assert isInIOThread()
         from .dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(master, DummyMember), type(master)
@@ -249,7 +244,6 @@ class Community(TaskManager):
         assert isinstance(my_member, Member), type(my_member)
         assert my_member.public_key, my_member.database_id
         assert my_member.private_key, my_member.database_id
-        assert isInIOThread()
 
         super(Community, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
@@ -304,7 +298,6 @@ class Community(TaskManager):
         self._sync_cache = None
 
     def initialize(self):
-        assert isInIOThread()
         self._logger.info("initializing:  %s", self.get_classification())
         self._logger.debug("master member: %s %s", self._master_member.mid.encode("HEX"),
             "" if self._master_member.public_key else " (no public key available)")

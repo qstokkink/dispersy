@@ -47,7 +47,7 @@ from struct import unpack_from
 from time import time
 
 import netifaces
-from twisted.internet import reactor
+from twisted.internet import reactor, threads
 from twisted.internet.defer import maybeDeferred, gatherResults
 from twisted.internet.task import LoopingCall
 from twisted.python.failure import Failure
@@ -470,8 +470,11 @@ class Dispersy(TaskManager):
         # both public and private keys are valid at this point
 
         # The member is not cached, let's try to get it from the database
-        row = self.database.execute(u"SELECT id, public_key, private_key FROM member WHERE mid = ? LIMIT 1", (buffer(mid),)).fetchone()
-
+        row = self.database.execute(u"SELECT id, public_key, private_key FROM member WHERE mid = ? LIMIT 1", (buffer(mid),))
+        try:
+            row = row.next()
+        except StopIteration:
+            row = None
         if row:
             database_id, public_key_from_db, private_key_from_db = row
 
@@ -1638,8 +1641,21 @@ ORDER BY global_time""", (meta.database_id, member_database_id)))
 
         return lan_address, wan_address
 
+    def store_update_forward(self, messages, store, update, forward):
+        """Chop up and thread the propagation of the messages we wish to send.
+        """
+        block_size = 10
+        length = len(messages)
+
+        for i in range(0,length, block_size):
+            rem = min(i+block_size, length)
+            reactor.callInThread(self._store_update_forward, messages[i:rem], store, update, forward)
+
+        return True # We don't want to wait untill all of the processing has finished
+
+
     # TODO(emilon): Now that we have removed the malicious behaviour stuff, maybe we could be a bit more relaxed with the DB syncing?
-    def store_update_forward(self, possibly_messages, store, update, forward):
+    def _store_update_forward(self, possibly_messages, store, update, forward):
         """
         Usually we need to do three things when we have a valid messages: (1) store it in our local
         database, (2) process the message locally by calling the handle_callback method, and (3)
@@ -1693,7 +1709,7 @@ ORDER BY global_time""", (meta.database_id, member_database_id)))
 
         store = store and isinstance(messages[0].meta.distribution, SyncDistribution)
         if store:
-            self._store(messages)
+            reactor.callInThread(self._store,messages)
 
         if update:
             if self._update(possibly_messages) == False:

@@ -8,11 +8,47 @@ This module provides basic database functionalty and simple version control.
 import logging
 import sys
 import thread
+from twisted.internet import reactor, threads
 from abc import ABCMeta, abstractmethod
 from sqlite3 import Connection
 
 from .util import attach_runtime_statistics
 
+def _deep_copy_nts_db_call(callback, *list_args, **keyword_args):
+    """Deep copy all cursor results.
+        This requires the full set of results to be fetched.
+        In some cases this is inefficient/slower.
+    """
+    returnid = keyword_args['get_lastrowid'] if 'get_lastrowid' in keyword_args else False
+    if 'get_lastrowid' in keyword_args:
+        keyword_args.pop('get_lastrowid', None)
+    rv = callback(*list_args, **keyword_args)
+    if returnid != False:
+        return rv.lastrowid
+    return iter(rv.fetchall()) if rv else None
+
+def thread_safe_blocking_call(ti, callback, *list_args, **keyword_args):
+    """Generic thread safe callback
+    """
+    if ti == thread.get_ident():
+        return _deep_copy_nts_db_call(callback, *list_args, **keyword_args)
+        #return callback(*list_args, **keyword_args)
+    return threads.blockingCallFromThread(reactor, _deep_copy_nts_db_call, callback, *list_args, **keyword_args)
+
+def ts_execute(ti, cursor, *list_args, **keyword_args):
+    """Convenience function for calling execute
+    """
+    return thread_safe_blocking_call(ti, cursor.execute, *list_args, **keyword_args)
+
+def ts_executescript(ti, cursor, *list_args, **keyword_args):
+    """Convenience function for calling executescript
+    """
+    return thread_safe_blocking_call(ti, cursor.executescript, *list_args, **keyword_args)
+
+def ts_executemany(ti, cursor, *list_args, **keyword_args):
+    """Convenience function for calling executemany
+    """
+    return thread_safe_blocking_call(ti, cursor.executemany, *list_args, **keyword_args)
 
 if "--explain-query-plan" in getattr(sys, "argv", []):
     _explain_query_plan_logger = logging.getLogger("explain-query-plan")
@@ -24,7 +60,7 @@ if "--explain-query-plan" in getattr(sys, "argv", []):
                 _explain_query_plan.add(statements)
 
                 _explain_query_plan_logger.info("Explain query plan for <<<%s>>>", statements)
-                for line in self._cursor.execute(u"EXPLAIN QUERY PLAN %s" % statements, bindings):
+                for line in ts_execute(self._debug_thread_ident, self._cursor, u"EXPLAIN QUERY PLAN %s" % statements, bindings):
                     _explain_query_plan_logger.info(line)
                 _explain_query_plan_logger.info("--")
 
@@ -90,8 +126,7 @@ class Database(object):
     def open(self, initial_statements=True, prepare_visioning=True):
         assert self._cursor is None, "Database.open() has already been called"
         assert self._connection is None, "Database.open() has already been called"
-        if __debug__:
-            self._debug_thread_ident = thread.get_ident()
+        self._debug_thread_ident = thread.get_ident()
         self._logger.debug("open database [%s]", self._file_path)
         self._connect()
         if initial_statements:
@@ -121,9 +156,9 @@ class Database(object):
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
 
         # collect current database configuration
-        page_size = int(next(self._cursor.execute(u"PRAGMA page_size"))[0])
-        journal_mode = unicode(next(self._cursor.execute(u"PRAGMA journal_mode"))[0]).upper()
-        synchronous = unicode(next(self._cursor.execute(u"PRAGMA synchronous"))[0]).upper()
+        page_size = int(next(ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA page_size"))[0])
+        journal_mode = unicode(next(ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA journal_mode"))[0]).upper()
+        synchronous = unicode(next(ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA synchronous"))[0]).upper()
 
         #
         # PRAGMA page_size = bytes;
@@ -137,10 +172,10 @@ class Database(object):
 
             # it is not possible to change page_size when WAL is enabled
             if journal_mode == u"WAL":
-                self._cursor.executescript(u"PRAGMA journal_mode = DELETE")
+                ts_executescript(self._debug_thread_ident, self._cursor, u"PRAGMA journal_mode = DELETE")
                 journal_mode = u"DELETE"
-            self._cursor.execute(u"PRAGMA page_size = 8192")
-            self._cursor.execute(u"VACUUM")
+            ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA page_size = 8192")
+            ts_execute(self._debug_thread_ident, self._cursor, u"VACUUM")
             page_size = 8192
 
         else:
@@ -152,8 +187,8 @@ class Database(object):
         #
         if not (journal_mode == u"WAL" or self._file_path == u":memory:"):
             self._logger.debug("PRAGMA journal_mode = WAL (previously: %s) [%s]", journal_mode, self._file_path)
-            self._cursor.execute(u"PRAGMA locking_mode = EXCLUSIVE")
-            self._cursor.execute(u"PRAGMA journal_mode = WAL")
+            ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA locking_mode = EXCLUSIVE")
+            ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA journal_mode = WAL")
 
         else:
             self._logger.debug("PRAGMA journal_mode = %s (no change) [%s]", journal_mode, self._file_path)
@@ -164,7 +199,7 @@ class Database(object):
         #
         if not synchronous in (u"NORMAL", u"1"):
             self._logger.debug("PRAGMA synchronous = NORMAL (previously: %s) [%s]", synchronous, self._file_path)
-            self._cursor.execute(u"PRAGMA synchronous = NORMAL")
+            ts_execute(self._debug_thread_ident, self._cursor, u"PRAGMA synchronous = NORMAL")
 
         else:
             self._logger.debug("PRAGMA synchronous = %s (no change) [%s]", synchronous, self._file_path)
@@ -213,7 +248,6 @@ class Database(object):
         assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._debug_thread_ident != 0, "please call database.open() first"
-        assert self._debug_thread_ident == thread.get_ident(), "Calling Database.execute on the wrong thread"
 
         self._logger.debug("disabling commit [%s]", self._file_path)
         self._pending_commits = max(1, self._pending_commits)
@@ -227,7 +261,6 @@ class Database(object):
         assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._debug_thread_ident != 0, "please call database.open() first"
-        assert self._debug_thread_ident == thread.get_ident(), "Calling Database.execute on the wrong thread"
 
         self._pending_commits, pending_commits = 0, self._pending_commits
 
@@ -277,7 +310,6 @@ class Database(object):
             assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
             assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
             assert self._debug_thread_ident != 0, "please call database.open() first"
-            assert self._debug_thread_ident == thread.get_ident(), "Calling Database.execute on the wrong thread"
             assert isinstance(statement, unicode), "The SQL statement must be given in unicode"
             assert isinstance(bindings, (tuple, list, dict, set)), "The bindings must be a tuple, list, dictionary, or set"
 
@@ -290,21 +322,17 @@ class Database(object):
             assert all(tests), "Bindings may not be strings.  Provide unicode for TEXT and buffer(...) for BLOB\n%s" % (statement,)
 
         self._logger.log(logging.NOTSET, "%s <-- %s [%s]", statement, bindings, self._file_path)
-        result = self._cursor.execute(statement, bindings)
-        if get_lastrowid:
-            result = self._cursor.lastrowid
-        return result
+        return ts_execute(self._debug_thread_ident, self._cursor, statement, bindings, get_lastrowid=get_lastrowid)
 
     @attach_runtime_statistics(u"{0.__class__.__name__}.{function_name} {1} [{0.file_path}]")
     def executescript(self, statements):
         assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._debug_thread_ident != 0, "please call database.open() first"
-        assert self._debug_thread_ident == thread.get_ident(), "Calling Database.execute on the wrong thread"
         assert isinstance(statements, unicode), "The SQL statement must be given in unicode"
 
         self._logger.log(logging.NOTSET, "%s [%s]", statements, self._file_path)
-        return self._cursor.executescript(statements)
+        return ts_executescript(self._debug_thread_ident, self._cursor, statements)
 
     @attach_explain_query_plan
     @attach_runtime_statistics(u"{0.__class__.__name__}.{function_name} {1} [{0.file_path}]")
@@ -338,7 +366,6 @@ class Database(object):
         assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._debug_thread_ident != 0, "please call database.open() first"
-        assert self._debug_thread_ident == thread.get_ident(), "Calling Database.execute on the wrong thread"
         if __debug__:
             # we allow GeneratorType but must convert it to a list in __debug__ mode since a
             # generator can only iterate once
@@ -364,14 +391,13 @@ class Database(object):
                 sequenceofbindings = iter(sequenceofbindings)
 
         self._logger.log(logging.NOTSET, "%s [%s]", statement, self._file_path)
-        return self._cursor.executemany(statement, sequenceofbindings)
+        return ts_executemany(self._debug_thread_ident, self._cursor, statement, sequenceofbindings)
 
     @attach_runtime_statistics(u"{0.__class__.__name__}.{function_name} [{0.file_path}]")
     def commit(self, exiting=False):
         assert self._cursor is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._connection is not None, "Database.close() has been called or Database.open() has not been called"
         assert self._debug_thread_ident != 0, "please call database.open() first"
-        assert self._debug_thread_ident == thread.get_ident(), "Calling Database.commit on the wrong thread"
         assert not (exiting and self._pending_commits), "No pending commits should be present when exiting"
 
         if self._pending_commits:
@@ -387,7 +413,7 @@ class Database(object):
                 except Exception as exception:
                     self._logger.exception("%s [%s]", exception, self._file_path)
 
-            return self._connection.commit()
+            return thread_safe_blocking_call(self._debug_thread_ident, self._connection.commit)
 
     @abstractmethod
     def check_database(self, database_version):

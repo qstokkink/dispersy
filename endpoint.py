@@ -207,9 +207,9 @@ class StandaloneEndpoint(Endpoint):
                 finally:
                     if packets:
                         self._logger.debug('%d came in, %d bytes in total', len(packets), sum(len(packet) for _, packet in packets))
-                        self.data_came_in(packets)
+                        reactor.callInThread(self.data_came_in, packets)
 
-    def data_came_in(self, packets, cache=True):
+    def data_came_in(self, packets, cache=False):
         assert self._dispersy, "Should not be called before open(...)"
         assert isinstance(packets, (list, tuple)), type(packets)
 
@@ -229,8 +229,7 @@ class StandaloneEndpoint(Endpoint):
                 for sock_addr, data in normal_packets:
                     self.log_packet(sock_addr, data, outbound=False)
 
-            # The endpoint runs on it's own thread, so we can't do a callLater here
-            reactor.callFromThread(self.dispersythread_data_came_in, normal_packets, time(), cache)
+            self.dispersythread_data_came_in(normal_packets, time(), cache)
 
     def dispersythread_data_came_in(self, packets, timestamp, cache=True):
         assert self._dispersy, "Should not be called before open(...)"
