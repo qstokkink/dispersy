@@ -1,6 +1,9 @@
-from ..community import Community, HardKilledCommunity
-from ..conversion import BinaryConversion
-from ..exception import ConversionNotFoundException
+from conversion import BinaryConversion
+from exception import ConversionNotFoundException
+from util import as_absolute_import
+
+Community = as_absolute_import(__name__, __file__, 1, ["community", ], ["Community", ])
+HardKilledCommunity = as_absolute_import(__name__, __file__, 1, ["community", ], ["HardKilledCommunity", ])
 
 
 class TrackerHardKilledCommunity(HardKilledCommunity):

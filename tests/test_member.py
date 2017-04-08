@@ -1,5 +1,5 @@
-from .dispersytestclass import DispersyTestFunc
-from ..util import call_on_reactor_thread
+from tests.dispersytestclass import DispersyTestFunc
+from util import call_on_reactor_thread
 
 
 class TestMember(DispersyTestFunc):

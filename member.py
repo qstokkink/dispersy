@@ -5,7 +5,7 @@ import logging
 class DummyMember(object):
 
     def __init__(self, dispersy, database_id, mid):
-        from .dispersy import Dispersy
+        from dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(database_id, int), type(database_id)
         assert isinstance(mid, str), type(mid)
@@ -74,8 +74,8 @@ class Member(DummyMember):
         """
         Create a new Member instance.
         """
-        from .dispersy import Dispersy
-        from .crypto import DispersyKey
+        from dispersy import Dispersy
+        from crypto import DispersyKey
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(key, DispersyKey), type(key)
         assert isinstance(database_id, int), type(database_id)
@@ -134,7 +134,7 @@ class Member(DummyMember):
         """
         Returns True when we have a dispersy-identity message for this member in COMMUNITY.
         """
-        from .community import Community
+        from community import Community
         assert isinstance(community, Community)
 
         return community.cid in self._has_identity

@@ -53,22 +53,22 @@ from twisted.internet.task import LoopingCall
 from twisted.python.failure import Failure
 from twisted.python.threadable import isInIOThread
 
-from .authentication import MemberAuthentication, DoubleMemberAuthentication
-from .candidate import LoopbackCandidate, WalkCandidate, Candidate
-from .community import Community
-from .crypto import DispersyCrypto, ECCrypto
-from .destination import CommunityDestination, CandidateDestination
-from .discovery.community import DiscoveryCommunity
-from .dispersydatabase import DispersyDatabase
-from .distribution import SyncDistribution, FullSyncDistribution, LastSyncDistribution
-from .endpoint import Endpoint
-from .exception import CommunityNotFoundException, ConversionNotFoundException, MetaNotFoundException
-from .member import DummyMember, Member
-from .message import Message, DropPacket, DelayPacket
-from .statistics import DispersyStatistics, _runtime_statistics
-from .taskmanager import TaskManager
-from .util import (attach_runtime_statistics, init_instrumentation, blocking_call_on_reactor_thread, is_valid_address,
-                   get_lan_address_without_netifaces, address_is_lan_without_netifaces)
+from authentication import MemberAuthentication, DoubleMemberAuthentication
+from candidate import LoopbackCandidate, WalkCandidate, Candidate
+from community import Community
+from crypto import DispersyCrypto, ECCrypto
+from destination import CommunityDestination, CandidateDestination
+from discovery.community import DiscoveryCommunity
+from dispersydatabase import DispersyDatabase
+from distribution import SyncDistribution, FullSyncDistribution, LastSyncDistribution
+from endpoint import Endpoint
+from exception import CommunityNotFoundException, ConversionNotFoundException, MetaNotFoundException
+from member import DummyMember, Member
+from message import Message, DropPacket, DelayPacket
+from statistics import DispersyStatistics, _runtime_statistics
+from taskmanager import TaskManager
+from util import (attach_runtime_statistics, init_instrumentation, blocking_call_on_reactor_thread, is_valid_address,
+                  get_lan_address_without_netifaces, address_is_lan_without_netifaces)
 
 
 # Set up the instrumentation utilities
@@ -389,7 +389,7 @@ class Dispersy(TaskManager):
         Returns a list with loaded communities.
         """
         assert isInIOThread(), "Must be called from the callback thread"
-        assert issubclass(community_cls, Community), type(community_cls)
+        assert issubclass(community_cls, Community), community_cls
         assert isinstance(args, tuple), type(args)
         assert kargs is None or isinstance(kargs, dict), type(kargs)
         assert not community_cls.get_classification() in self._auto_load_communities

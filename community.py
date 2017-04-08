@@ -20,27 +20,27 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall, deferLater
 from twisted.python.threadable import isInIOThread
 
-from .authentication import NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
-from .bloomfilter import BloomFilter
-from .candidate import Candidate, WalkCandidate
-from .conversion import BinaryConversion, DefaultConversion, Conversion
-from .destination import CommunityDestination, CandidateDestination
-from .distribution import (SyncDistribution, GlobalTimePruning, LastSyncDistribution, DirectDistribution,
+from authentication import NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
+from bloomfilter import BloomFilter
+from candidate import Candidate, WalkCandidate
+from conversion import BinaryConversion, DefaultConversion, Conversion
+from destination import CommunityDestination, CandidateDestination
+from distribution import (SyncDistribution, GlobalTimePruning, LastSyncDistribution, DirectDistribution,
                            FullSyncDistribution)
-from .exception import ConversionNotFoundException, MetaNotFoundException
-from .member import DummyMember, Member
-from .message import (BatchConfiguration, Message, Packet, DropMessage, DelayMessageByProof,
+from exception import ConversionNotFoundException, MetaNotFoundException
+from member import DummyMember, Member
+from message import (BatchConfiguration, Message, Packet, DropMessage, DelayMessageByProof,
                       DelayMessageByMissingMessage, DropPacket, DelayPacket, DelayMessage)
-from .payload import (AuthorizePayload, RevokePayload, UndoPayload, DestroyCommunityPayload, DynamicSettingsPayload,
+from payload import (AuthorizePayload, RevokePayload, UndoPayload, DestroyCommunityPayload, DynamicSettingsPayload,
                       IdentityPayload, MissingIdentityPayload, IntroductionRequestPayload, IntroductionResponsePayload,
                       PunctureRequestPayload, PuncturePayload, MissingMessagePayload, MissingSequencePayload,
                       MissingProofPayload, SignatureRequestPayload, SignatureResponsePayload)
-from .requestcache import RequestCache, SignatureRequestCache, IntroductionRequestCache
-from .resolution import PublicResolution, LinearResolution, DynamicResolution
-from .statistics import CommunityStatistics
-from .taskmanager import TaskManager
-from .timeline import Timeline
-from .util import runtime_duration_warning, attach_runtime_statistics, deprecated, is_valid_address
+from requestcache import RequestCache, SignatureRequestCache, IntroductionRequestCache
+from resolution import PublicResolution, LinearResolution, DynamicResolution
+from statistics import CommunityStatistics
+from taskmanager import TaskManager
+from timeline import Timeline
+from util import runtime_duration_warning, attach_runtime_statistics, deprecated, is_valid_address
 
 
 DOWNLOAD_MM_PK_INTERVAL = 15.0
@@ -121,7 +121,7 @@ class Community(TaskManager):
         @return: The created community instance.
         @rtype: Community
         """
-        from .dispersy import Dispersy
+        from dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(my_member, Member), type(my_member)
         assert my_member.public_key, my_member.database_id
@@ -173,7 +173,7 @@ class Community(TaskManager):
 
     @classmethod
     def get_master_members(cls, dispersy):
-        from .dispersy import Dispersy
+        from dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isInIOThread()
         logger.debug("retrieving all master members owning %s communities", cls.get_classification())
@@ -211,7 +211,7 @@ class Community(TaskManager):
         @return: The initialized community instance.
         @rtype: Community
         """
-        from .dispersy import Dispersy
+        from dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(my_member, Member), type(my_member)
         assert my_member.public_key, my_member.database_id
@@ -242,7 +242,7 @@ class Community(TaskManager):
         @type my_member: Member
         """
         assert isInIOThread()
-        from .dispersy import Dispersy
+        from dispersy import Dispersy
         assert isinstance(dispersy, Dispersy), type(dispersy)
         assert isinstance(master, DummyMember), type(master)
         assert master.mid not in dispersy._communities
@@ -3136,7 +3136,6 @@ class Community(TaskManager):
         is authorizing.
 
         >>> # Authorize Bob to use Permit payload for 'some-message'
-        >>> from Payload import Permit
         >>> bob = dispersy.get_member(public_key=bob_public_key)
         >>> msg = self.get_meta_message(u"some-message")
         >>> self.create_authorize(self, [(bob, msg, u'permit')])
@@ -3211,7 +3210,6 @@ class Community(TaskManager):
         must have the revoke permission for each of the permissions that she is revoking.
 
         >>> # Revoke the right of Bob to use Permit payload for 'some-message'
-        >>> from Payload import Permit
         >>> bob = dispersy.get_member(public_key=bob_public_key)
         >>> msg = self.get_meta_message(u"some-message")
         >>> self.create_revoke(community, [(bob, msg, u'permit')])

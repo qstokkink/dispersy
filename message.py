@@ -2,14 +2,14 @@ import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from time import time
 
-from .authentication import Authentication
-from .candidate import Candidate, LoopbackCandidate
-from .destination import Destination
-from .distribution import Distribution
-from .meta import MetaObject
-from .member import Member
-from .payload import Payload
-from .resolution import Resolution, DynamicResolution
+from authentication import Authentication
+from candidate import Candidate, LoopbackCandidate
+from destination import Destination
+from distribution import Distribution
+from meta import MetaObject
+from member import Member
+from payload import Payload
+from resolution import Resolution, DynamicResolution
 
 
 class DelayPacket(Exception):
@@ -21,7 +21,7 @@ class DelayPacket(Exception):
     __metaclass__ = ABCMeta
 
     def __init__(self, community, msg):
-        from .community import Community
+        from community import Community
         assert isinstance(community, Community), type(community)
 
         super(DelayPacket, self).__init__(msg)
@@ -319,7 +319,7 @@ class Message(MetaObject):
     class Implementation(Packet):
 
         def __init__(self, meta, authentication, resolution, distribution, destination, payload, conversion=None, candidate=None, source=u"unknown", packet="", packet_id=0, sign=True):
-            from .conversion import Conversion
+            from conversion import Conversion
             assert isinstance(meta, Message), "META has invalid type '%s'" % type(meta)
             assert isinstance(authentication, meta.authentication.Implementation), "AUTHENTICATION has invalid type '%s'" % type(authentication)
             assert isinstance(resolution, meta.resolution.Implementation), "RESOLUTION has invalid type '%s'" % type(resolution)
@@ -423,7 +423,7 @@ class Message(MetaObject):
             return "<%s.%s %s>" % (self._meta.__class__.__name__, self.__class__.__name__, self._meta._name)
 
     def __init__(self, community, name, authentication, resolution, distribution, destination, payload, check_callback, handle_callback, undo_callback=None, batch=None):
-        from .community import Community
+        from community import Community
         assert isinstance(community, Community), "COMMUNITY has invalid type '%s'" % type(community)
         assert isinstance(name, unicode), "NAME has invalid type '%s'" % type(name)
         assert isinstance(authentication, Authentication), "AUTHENTICATION has invalid type '%s'" % type(authentication)
@@ -538,10 +538,10 @@ class Message(MetaObject):
 
     @staticmethod
     def check_policy_combination(authentication, resolution, distribution, destination):
-        from .authentication import Authentication, NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
-        from .resolution import Resolution, PublicResolution, LinearResolution, DynamicResolution
-        from .distribution import Distribution, RelayDistribution, DirectDistribution, FullSyncDistribution, LastSyncDistribution
-        from .destination import Destination, CandidateDestination, CommunityDestination
+        from authentication import Authentication, NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
+        from resolution import Resolution, PublicResolution, LinearResolution, DynamicResolution
+        from distribution import Distribution, RelayDistribution, DirectDistribution, FullSyncDistribution, LastSyncDistribution
+        from destination import Destination, CandidateDestination, CommunityDestination
 
         assert isinstance(authentication, Authentication), type(authentication)
         assert isinstance(resolution, Resolution), type(resolution)

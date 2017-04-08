@@ -8,8 +8,8 @@ This module provides an interface to the Dispersy database.
 
 from itertools import groupby
 
-from .database import Database
-from .distribution import FullSyncDistribution
+from database import Database
+from distribution import FullSyncDistribution
 
 
 LATEST_VERSION = 21

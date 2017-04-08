@@ -1,6 +1,6 @@
 from time import sleep
 
-from .dispersytestclass import DispersyTestFunc
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestSignature(DispersyTestFunc):

@@ -1,8 +1,10 @@
 from struct import pack, unpack_from
 from socket import inet_ntoa, inet_aton
 
-from ..message import DropPacket
-from ..conversion import BinaryConversion
+from message import DropPacket
+from util import as_absolute_import
+
+BinaryConversion = as_absolute_import(__name__, __file__, 1, ["conversion", ], ["BinaryConversion", ])
 
 
 class DiscoveryConversion(BinaryConversion):

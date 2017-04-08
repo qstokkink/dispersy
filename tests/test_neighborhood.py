@@ -1,5 +1,5 @@
-from .debugcommunity.community import DebugCommunity
-from .dispersytestclass import DispersyTestFunc
+from tests.debugcommunity.community import DebugCommunity
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestNeighborhood(DispersyTestFunc):

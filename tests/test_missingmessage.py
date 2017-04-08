@@ -1,6 +1,6 @@
 from random import shuffle
 
-from .dispersytestclass import DispersyTestFunc
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestMissingMessage(DispersyTestFunc):

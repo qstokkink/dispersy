@@ -1,5 +1,5 @@
-from .candidate import Candidate
-from .meta import MetaObject
+from candidate import Candidate
+from meta import MetaObject
 
 
 class Destination(MetaObject):
@@ -11,7 +11,7 @@ class Destination(MetaObject):
         """
         Setup is called after the meta message is initially created.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
 
     def __str__(self):

@@ -17,7 +17,7 @@ from twisted.internet.task import LoopingCall
 from twisted.python import failure
 from twisted.python.threadable import isInIOThread
 
-from .statistics import _runtime_statistics
+from statistics import _runtime_statistics
 
 
 logger = logging.getLogger(__name__)
@@ -344,4 +344,68 @@ def address_in_subnet(address, subnet):
     return address == subnet_main
 
 
+def as_absolute_import(this_name, this_file, levels_up, path_as_list, load_class=[]):
+    """
+    Convert a relative import to an absolute import.
+    
+    For instance, if one needs to import ``foo.py`` in ``a/b/foo.py``:
+    ``as_absolute_import(__name__, __file__, 2, ['foo',])``
+    
+    Or ``a/c/foo.py`` in ``a/b/foo.py``:
+    ``as_absolute_import(__name__, __file__, 2, ['c', 'foo']``
+    
+    :param this_name: the '__name__' of the importing module
+    :type this_name: str
+    :param this_file: the '__file__' of the importing module
+    :type this_file: str
+    :param levels_up: the amount of levels to go up in the folder hierarchy
+    :type levels_up: int
+    :param path_as_list: the path name without separators from the 'top' folder
+    :type path_as_list: [str]
+    :param load_class: the class within the module to load
+    :type load_class: [str]
+    :return: the loaded module
+    """
+    import imp, os, sys
 
+    # Negative list indices are base 1
+    levels_up += 1
+
+    # Module/File path construction:
+    # 1. Get the parent path by traversing the calling module's name
+    # 2. Traverse downward from the parent path using the path_as_list
+
+    # Construct the module path
+    relative_name = '.'.join(this_name.split('.')[:-levels_up])
+    relative_name += ('.' if relative_name else '') + '.'.join(path_as_list)
+
+    # Check if it was already loaded
+    if relative_name in sys.modules:
+        out = sys.modules[relative_name]
+        return reduce(getattr, [out,] + load_class)
+
+    # Construct the (extensionless) module file name
+    relative_path = this_file
+    for _ in range(levels_up):
+        relative_path = os.path.dirname(relative_path)
+    relative_path = os.path.join(relative_path, *path_as_list)
+
+    # Find the specified file
+    # Can exist as .py files or .pyc files (libraries are not supported here)
+    actual_path = None
+    imp_type = None
+    if os.path.isfile(relative_path + '.py'):
+        actual_path = relative_path + '.py'
+        imp_type = imp.PY_SOURCE
+    elif os.path.isfile(relative_path + '.pyc'):
+        actual_path = relative_path + '.pyc'
+        imp_type = imp.PY_COMPILED
+
+    # If the file could be found, load the module from it
+    if actual_path:
+        out = None
+        with open(actual_path, 'rb') as f:
+            out = imp.load_module(relative_name, f, actual_path, ('.py', 'rb', imp_type))
+        return reduce(getattr, [out,] + load_class)
+    else:
+        raise ImportError("Module " + str(relative_name) + " could not be loaded, file " + str(relative_path) + ".py(c) not found!")

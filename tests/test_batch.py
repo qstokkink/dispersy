@@ -1,6 +1,6 @@
 from time import time, sleep
 
-from .dispersytestclass import DispersyTestFunc
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestBatch(DispersyTestFunc):

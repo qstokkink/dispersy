@@ -7,15 +7,15 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import deferLater
 from twisted.python.threadable import isInIOThread
 
-from ...bloomfilter import BloomFilter
-from ...candidate import Candidate
-from ...endpoint import TUNNEL_PREFIX
-from ...exception import ConversionNotFoundException
-from ...member import Member
-from ...message import Message
-from ...resolution import PublicResolution, LinearResolution
-from .community import DebugCommunity
-from ...util import blocking_call_on_reactor_thread, blockingCallFromThread
+from bloomfilter import BloomFilter
+from candidate import Candidate
+from endpoint import TUNNEL_PREFIX
+from exception import ConversionNotFoundException
+from member import Member
+from message import Message
+from resolution import PublicResolution, LinearResolution
+from tests.debugcommunity.community import DebugCommunity
+from util import blocking_call_on_reactor_thread, blockingCallFromThread
 
 
 class DebugNode(object):

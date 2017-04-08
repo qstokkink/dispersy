@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..crypto import ECCrypto
+from crypto import ECCrypto
 
 
 class TestLowLevelCrypto(TestCase):

@@ -4,7 +4,7 @@ import logging
 from twisted.internet import reactor
 from twisted.python.threadable import isInIOThread
 
-from .taskmanager import TaskManager
+from taskmanager import TaskManager
 
 
 class NumberCache(object):

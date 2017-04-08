@@ -1,8 +1,8 @@
 from twisted.internet.defer import inlineCallbacks
-from ..exception import CommunityNotFoundException
-from ..util import call_on_reactor_thread
-from .debugcommunity.community import DebugCommunity
-from .dispersytestclass import DispersyTestFunc
+from exception import CommunityNotFoundException
+from util import call_on_reactor_thread
+from tests.debugcommunity.community import DebugCommunity
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestClassification(DispersyTestFunc):

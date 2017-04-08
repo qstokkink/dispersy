@@ -6,14 +6,14 @@ queried as to who had what actions at some point in time.
 from itertools import count, groupby
 import logging
 
-from .authentication import MemberAuthentication, DoubleMemberAuthentication
-from .resolution import PublicResolution, LinearResolution, DynamicResolution
+from authentication import MemberAuthentication, DoubleMemberAuthentication
+from resolution import PublicResolution, LinearResolution, DynamicResolution
 
 
 class Timeline(object):
 
     def __init__(self, community):
-        from .community import Community
+        from community import Community
         assert isinstance(community, Community)
 
         super(Timeline, self).__init__()
@@ -65,7 +65,7 @@ class Timeline(object):
         list containing zero or more Message.Implementation instances that grant or revoke
         permissions.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message.Implementation), message
         assert isinstance(message.authentication, (MemberAuthentication.Implementation, DoubleMemberAuthentication.Implementation)), message.authentication
         assert isinstance(permission, unicode)
@@ -138,7 +138,7 @@ class Timeline(object):
         """
         Check if we are allowed to create a message.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(meta, Message)
         assert isinstance(global_time, (int, long))
         assert global_time >= 0
@@ -153,8 +153,8 @@ class Timeline(object):
         Returns a (allowed, proofs) tuple where allowed is either True or False and proofs is a list
         containing the Message.Implementation instances grant or revoke the permissions.
         """
-        from .member import Member
-        from .message import Message
+        from member import Member
+        from message import Message
         assert isinstance(member, Member)
         assert isinstance(global_time, (int, long))
         assert global_time > 0
@@ -257,8 +257,8 @@ class Timeline(object):
         return (True, all_proofs)
 
     def authorize(self, author, global_time, permission_triplets, proof):
-        from .member import Member
-        from .message import Message
+        from member import Member
+        from message import Message
         assert isinstance(author, Member)
         assert isinstance(global_time, (int, long))
         assert global_time > 0
@@ -339,8 +339,8 @@ class Timeline(object):
         return (True, authorize_proofs)
 
     def revoke(self, author, global_time, permission_triplets, proof):
-        from .member import Member
-        from .message import Message
+        from member import Member
+        from message import Message
         assert isinstance(author, Member)
         assert isinstance(global_time, (int, long))
         assert global_time > 0
@@ -425,7 +425,7 @@ class Timeline(object):
         Returns the resolution policy and associated proof that is used for MESSAGE at time
         GLOBAL_TIME.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
         assert isinstance(global_time, (int, long))
 
@@ -440,7 +440,7 @@ class Timeline(object):
         return message.resolution.default, []
 
     def change_resolution_policy(self, message, global_time, policy, proof):
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
         assert isinstance(global_time, (int, long))
         assert isinstance(policy, (PublicResolution, LinearResolution))

@@ -1,4 +1,7 @@
-from ..payload import Payload, IntroductionRequestPayload
+from util import as_absolute_import
+
+Payload = as_absolute_import(__name__, __file__, 1, ["payload", ], ["Payload", ])
+IntroductionRequestPayload = as_absolute_import(__name__, __file__, 1, ["payload", ], ["IntroductionRequestPayload", ])
 
 
 class SimilarityRequestPayload(Payload):

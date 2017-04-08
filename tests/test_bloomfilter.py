@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..bloomfilter import BloomFilter
+from bloomfilter import BloomFilter
 
 
 class TestBloomFilter(TestCase):

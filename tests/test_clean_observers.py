@@ -1,7 +1,7 @@
 from twisted.logger import LimitedHistoryLogObserver, globalLogPublisher
 
-from .dispersytestclass import DispersyTestFunc
-from ..tool.clean_observers import clean_twisted_observers
+from tests.dispersytestclass import DispersyTestFunc
+from tool.clean_observers import clean_twisted_observers
 
 
 class TestCleanObservers(DispersyTestFunc):

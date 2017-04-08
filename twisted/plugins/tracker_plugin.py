@@ -24,13 +24,13 @@ import signal
 import sys
 from time import time
 
-from dispersy.candidate import LoopbackCandidate
-from dispersy.crypto import NoVerifyCrypto, NoCrypto
-from dispersy.discovery.community import DiscoveryCommunity
-from dispersy.dispersy import Dispersy
-from dispersy.endpoint import StandaloneEndpoint
-from dispersy.exception import CommunityNotFoundException
-from dispersy.tracker.community import TrackerCommunity, TrackerHardKilledCommunity
+from candidate import LoopbackCandidate
+from crypto import NoVerifyCrypto, NoCrypto
+from discovery.community import DiscoveryCommunity
+from dispersy import Dispersy
+from endpoint import StandaloneEndpoint
+from exception import CommunityNotFoundException
+from tracker.community import TrackerCommunity, TrackerHardKilledCommunity
 from twisted.application.service import IServiceMaker, MultiService
 from twisted.conch import manhole_tap
 from twisted.internet import reactor

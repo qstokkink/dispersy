@@ -4,16 +4,16 @@ from socket import inet_ntoa, inet_aton
 from struct import pack, unpack_from, Struct
 import logging
 
-from .authentication import Authentication, NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
-from .bloomfilter import BloomFilter
-from .candidate import Candidate
-from .destination import Destination, CommunityDestination, CandidateDestination
-from .distribution import Distribution, FullSyncDistribution, LastSyncDistribution, DirectDistribution
-from .exception import MetaNotFoundException
-from .message import DelayPacketByMissingMember, DropPacket, Message
-from .payload import Payload
-from .resolution import Resolution, PublicResolution, LinearResolution, DynamicResolution
-from .util import attach_runtime_statistics
+from authentication import Authentication, NoAuthentication, MemberAuthentication, DoubleMemberAuthentication
+from bloomfilter import BloomFilter
+from candidate import Candidate
+from destination import Destination, CommunityDestination, CandidateDestination
+from distribution import Distribution, FullSyncDistribution, LastSyncDistribution, DirectDistribution
+from exception import MetaNotFoundException
+from message import DelayPacketByMissingMember, DropPacket, Message
+from payload import Payload
+from resolution import Resolution, PublicResolution, LinearResolution, DynamicResolution
+from util import attach_runtime_statistics
 
 
 class Conversion(object):
@@ -36,7 +36,7 @@ class Conversion(object):
         a proper conversion instance can be made for the Community.  '\xff' is reserved for when
         more than one byte is needed as a version indicator.
         """
-        from .community import Community
+        from community import Community
         assert isinstance(community, Community), type(community)
         assert isinstance(dispersy_version, str), type(dispersy_version)
         assert len(dispersy_version) == 1, dispersy_version

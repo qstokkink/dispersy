@@ -1,5 +1,5 @@
-from ..resolution import PublicResolution, LinearResolution
-from .dispersytestclass import DispersyTestFunc
+from resolution import PublicResolution, LinearResolution
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestDynamicSettings(DispersyTestFunc):

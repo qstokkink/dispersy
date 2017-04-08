@@ -1,4 +1,4 @@
-from .dispersytestclass import DispersyTestFunc
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestWalker(DispersyTestFunc):

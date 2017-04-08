@@ -11,7 +11,7 @@ creator of this message.
 """
 
 from abc import ABCMeta, abstractproperty
-from .meta import MetaObject
+from meta import MetaObject
 
 
 class Authentication(MetaObject):
@@ -37,7 +37,7 @@ class Authentication(MetaObject):
             pass
 
         def setup(self, message_impl):
-            from .message import Message
+            from message import Message
             assert isinstance(message_impl, Message.Implementation)
 
     def setup(self, message):
@@ -52,7 +52,7 @@ class Authentication(MetaObject):
         @param message: The meta message.  Note that self is message.authentication.
         @type message: Message
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
 
 
@@ -119,7 +119,7 @@ class MemberAuthentication(Authentication):
             @param signature: The signature used to sign this message
             @type signature: string
             """
-            from .member import Member
+            from member import Member
             assert isinstance(member, Member)
             assert isinstance(signature, str)
             super(MemberAuthentication.Implementation, self).__init__(meta)
@@ -237,7 +237,7 @@ class DoubleMemberAuthentication(Authentication):
              be given when decoding a message.
             @type signatures: list containing strings
             """
-            from .member import Member
+            from member import Member
             assert isinstance(members, list), type(members)
             assert len(members) == 2
             assert all(isinstance(member, Member) for member in members)

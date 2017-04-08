@@ -6,7 +6,7 @@ from twisted.internet.defer import Deferred, DeferredList
 from twisted.internet.task import LoopingCall
 from twisted.python.threadable import isInIOThread
 
-from .util import blocking_call_on_reactor_thread
+from util import blocking_call_on_reactor_thread
 
 CLEANUP_FREQUENCY = 100
 

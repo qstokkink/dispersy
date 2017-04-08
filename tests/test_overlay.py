@@ -8,13 +8,13 @@ from nose.twistedtools import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import deferLater
 
-from ..conversion import DefaultConversion
-from ..dispersy import Dispersy
-from ..endpoint import StandaloneEndpoint
-from ..util import blocking_call_on_reactor_thread
-from .debugcommunity.community import DebugCommunity
-from .debugcommunity.conversion import DebugCommunityConversion
-from .dispersytestclass import DispersyTestFunc
+from conversion import DefaultConversion
+from dispersy import Dispersy
+from endpoint import StandaloneEndpoint
+from util import blocking_call_on_reactor_thread
+from tests.debugcommunity.community import DebugCommunity
+from tests.debugcommunity.conversion import DebugCommunityConversion
+from tests.dispersytestclass import DispersyTestFunc
 
 
 summary_logger = logging.getLogger("test-overlay-summary")

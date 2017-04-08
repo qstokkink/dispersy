@@ -10,11 +10,11 @@
 from itertools import combinations, islice
 from time import time
 
-from ..candidate import CANDIDATE_ELIGIBLE_DELAY
-from ..tracker.community import TrackerCommunity
-from ..util import blocking_call_on_reactor_thread
-from .debugcommunity.community import DebugCommunity
-from .dispersytestclass import DispersyTestFunc
+from candidate import CANDIDATE_ELIGIBLE_DELAY
+from tracker.community import TrackerCommunity
+from util import blocking_call_on_reactor_thread
+from tests.debugcommunity.community import DebugCommunity
+from tests.dispersytestclass import DispersyTestFunc
 
 
 def print_unittest_combinations():

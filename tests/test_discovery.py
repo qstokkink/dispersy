@@ -1,10 +1,10 @@
 from twisted.internet.defer import inlineCallbacks
-from .dispersytestclass import DispersyTestFunc
-from ..discovery.community import DiscoveryCommunity, BOOTSTRAP_FILE_ENVNAME
-from ..discovery.bootstrap import _DEFAULT_ADDRESSES
+from tests.dispersytestclass import DispersyTestFunc
+from discovery.community import DiscoveryCommunity, BOOTSTRAP_FILE_ENVNAME
+from discovery.bootstrap import _DEFAULT_ADDRESSES
 import os
 import time
-from ..util import blocking_call_on_reactor_thread
+from util import blocking_call_on_reactor_thread
 
 
 class TestDiscovery(DispersyTestFunc):

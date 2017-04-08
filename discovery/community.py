@@ -9,20 +9,22 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 
-from ..authentication import MemberAuthentication, NoAuthentication
-from ..candidate import CANDIDATE_WALK_LIFETIME, Candidate, WalkCandidate
-from ..community import Community
-from ..conversion import DefaultConversion
-from ..destination import CandidateDestination
-from ..distribution import DirectDistribution
-from ..member import Member
-from ..message import DelayMessageByProof, DropMessage, Message
-from ..requestcache import RandomNumberCache
-from ..resolution import PublicResolution
-from .bootstrap import Bootstrap
-from .conversion import DiscoveryConversion
-from .payload import (ExtendedIntroPayload, PingPayload, PongPayload, SimilarityRequestPayload,
-                      SimilarityResponsePayload)
+from authentication import MemberAuthentication, NoAuthentication
+from candidate import CANDIDATE_WALK_LIFETIME, Candidate, WalkCandidate
+from destination import CandidateDestination
+from distribution import DirectDistribution
+from member import Member
+from message import DelayMessageByProof, DropMessage, Message
+from requestcache import RandomNumberCache
+from resolution import PublicResolution
+from util import as_absolute_import
+from discovery.bootstrap import Bootstrap
+from discovery.conversion import DiscoveryConversion
+from discovery.payload import (ExtendedIntroPayload, PingPayload, PongPayload, SimilarityRequestPayload,
+                               SimilarityResponsePayload)
+
+Community = as_absolute_import(__name__, __file__, 1, ["community", ], ["Community", ])
+DefaultConversion = as_absolute_import(__name__, __file__, 1, ["conversion", ], ["DefaultConversion", ])
 
 
 DEBUG_VERBOSE = False

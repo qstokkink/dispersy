@@ -1,14 +1,17 @@
-from ...authentication import DoubleMemberAuthentication, MemberAuthentication
-from ...candidate import Candidate
-from ...community import Community, HardKilledCommunity
-from ...conversion import DefaultConversion
-from ...destination import CommunityDestination
-from ...distribution import DirectDistribution, FullSyncDistribution, LastSyncDistribution, GlobalTimePruning
-from ...message import Message, DelayMessageByProof, BatchConfiguration
-from ...resolution import PublicResolution, LinearResolution, DynamicResolution
+from authentication import DoubleMemberAuthentication, MemberAuthentication
+from candidate import Candidate
+from destination import CommunityDestination
+from distribution import DirectDistribution, FullSyncDistribution, LastSyncDistribution, GlobalTimePruning
+from message import Message, DelayMessageByProof, BatchConfiguration
+from resolution import PublicResolution, LinearResolution, DynamicResolution
+from util import as_absolute_import
 
-from .payload import TextPayload
-from .conversion import DebugCommunityConversion
+Community = as_absolute_import(__name__, __file__, 2, ["community", ], ["Community", ])
+HardKilledCommunity = as_absolute_import(__name__, __file__, 2, ["community", ], ["HardKilledCommunity", ])
+DefaultConversion = as_absolute_import(__name__, __file__, 2, ["conversion", ], ["DefaultConversion", ])
+
+from tests.debugcommunity.payload import TextPayload
+from tests.debugcommunity.conversion import DebugCommunityConversion
 
 
 class DebugCommunity(Community):

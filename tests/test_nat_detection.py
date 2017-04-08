@@ -1,7 +1,7 @@
 from time import time
 
-from .dispersytestclass import DispersyTestFunc
-from ..util import call_on_reactor_thread, address_is_lan_without_netifaces
+from tests.dispersytestclass import DispersyTestFunc
+from util import call_on_reactor_thread, address_is_lan_without_netifaces
 
 class TestNATDetection(DispersyTestFunc):
 

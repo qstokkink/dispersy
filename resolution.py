@@ -1,4 +1,4 @@
-from .meta import MetaObject
+from meta import MetaObject
 
 
 class Resolution(MetaObject):
@@ -10,7 +10,7 @@ class Resolution(MetaObject):
         """
         Setup is called after the meta message is initially created.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
 
 

@@ -17,7 +17,7 @@ if sys.platform == "darwin":
 else:
     import sqlite3
 
-from .util import attach_runtime_statistics
+from util import attach_runtime_statistics
 
 
 if "--explain-query-plan" in getattr(sys, "argv", []):

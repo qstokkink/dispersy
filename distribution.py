@@ -15,10 +15,10 @@ global_time.
 """
 
 from abc import ABCMeta, abstractmethod
-from .authentication import DoubleMemberAuthentication, MemberAuthentication
-from .candidate import WalkCandidate
-from .meta import MetaObject
-from .util import attach_runtime_statistics
+from authentication import DoubleMemberAuthentication, MemberAuthentication
+from candidate import WalkCandidate
+from meta import MetaObject
+from util import attach_runtime_statistics
 
 
 class Pruning(MetaObject):
@@ -138,7 +138,7 @@ class Distribution(MetaObject):
         """
         Setup is called after the meta message is initially created.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
 
     def check_batch(self, dispersy, messages):
@@ -239,7 +239,7 @@ class SyncDistribution(Distribution):
         It is used to determine the current sequence number, based on
         which messages are already in the database.
         """
-        from .message import Message
+        from message import Message
         assert isinstance(message, Message)
 
         # pruning requires information from the community
@@ -401,7 +401,7 @@ class FullSyncDistribution(SyncDistribution):
         @return: A generator with messages, DropMessage, or DelayMessageBySequence instances
         @rtype: [Message.Implementation|DropMessage|DelayMessageBySequence]
         """
-        from .message import DelayMessageBySequence, DropMessage, Message
+        from message import DelayMessageBySequence, DropMessage, Message
 
         assert isinstance(messages, list)
         assert len(messages) > 0
@@ -594,7 +594,7 @@ class LastSyncDistribution(SyncDistribution):
         @return: A generator with Message.Implementation or DropMessage instances
         @rtype: [Message.Implementation|DropMessage]
         """
-        from .message import DropMessage, Message
+        from message import DropMessage, Message
 
         assert isinstance(messages, list)
         assert len(messages) > 0

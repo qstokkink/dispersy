@@ -3,7 +3,7 @@ import shutil
 from unittest import TestCase
 from tempfile import mkdtemp
 
-from ..dispersydatabase import DispersyDatabase, DatabaseVersionTooLowError, DatabaseVersionTooHighError
+from dispersydatabase import DispersyDatabase, DatabaseVersionTooLowError, DatabaseVersionTooHighError
 
 
 class TestDatabase(TestCase):

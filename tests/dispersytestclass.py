@@ -8,12 +8,12 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.logger import formatEvent, globalLogPublisher, LogLevel
 
-from ..discovery.community import PEERCACHE_FILENAME
-from ..dispersy import Dispersy
-from ..endpoint import ManualEnpoint
-from ..util import blocking_call_on_reactor_thread
-from .debugcommunity.community import DebugCommunity
-from .debugcommunity.node import DebugNode
+from discovery.community import PEERCACHE_FILENAME
+from dispersy import Dispersy
+from endpoint import ManualEnpoint
+from util import blocking_call_on_reactor_thread
+from tests.debugcommunity.community import DebugCommunity
+from tests.debugcommunity.node import DebugNode
 
 
 # use logger.conf if it exists

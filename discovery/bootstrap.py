@@ -7,9 +7,9 @@ from twisted.internet.abstract import isIPAddress
 from twisted.internet.defer import gatherResults, succeed, inlineCallbacks
 from twisted.internet.task import LoopingCall
 
-from ..candidate import Candidate
-from ..taskmanager import TaskManager
-from ..util import blocking_call_on_reactor_thread
+from candidate import Candidate
+from taskmanager import TaskManager
+from util import blocking_call_on_reactor_thread
 
 # Note that some the following DNS entries point to the same IP addresses.  For example, currently
 # both DISPERSY1.TRIBLER.ORG and DISPERSY1.ST.TUDELFT.NL point to 130.161.211.245.  Once these two

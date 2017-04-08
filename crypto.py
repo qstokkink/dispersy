@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'libnac
 
 import libnacl.dual
 
-from .util import attach_runtime_statistics
+from util import attach_runtime_statistics
 from libnacl.encode import hex_encode
 
 _STRUCT_L = Struct(">L")

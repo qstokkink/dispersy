@@ -1,7 +1,6 @@
-from struct import pack, unpack_from
+from util import as_absolute_import
 
-from ...conversion import BinaryConversion
-from ...message import DropPacket
+BinaryConversion = as_absolute_import(__name__, __file__, 2, ["conversion", ], ["BinaryConversion", ])
 
 
 class DebugCommunityConversion(BinaryConversion):

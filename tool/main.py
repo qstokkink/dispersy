@@ -9,8 +9,8 @@ import signal
 from twisted.internet import reactor
 from twisted.python.log import addObserver
 
-from ..dispersy import Dispersy
-from ..endpoint import StandaloneEndpoint
+from dispersy import Dispersy
+from endpoint import StandaloneEndpoint
 
 
 # use logger.conf if it exists
@@ -75,7 +75,7 @@ def main_real(setup=None):
         exit(1)
 
     if opt.strict:
-        from ..util import unhandled_error_observer
+        from util import unhandled_error_observer
         addObserver(unhandled_error_observer)
 
     # setup

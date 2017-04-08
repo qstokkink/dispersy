@@ -11,7 +11,7 @@ from time import time
 from twisted.internet import reactor
 
 from util import is_valid_address_or_log
-from .candidate import Candidate
+from candidate import Candidate
 
 
 if sys.platform == 'win32':

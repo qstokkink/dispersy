@@ -1,7 +1,7 @@
 import logging
 
-from .member import Member, DummyMember
-from .util import is_valid_address
+from member import Member, DummyMember
+from util import is_valid_address
 
 
 # delay and lifetime values are chosen to ensure that a candidate will not exceed 60.0 or 30.0

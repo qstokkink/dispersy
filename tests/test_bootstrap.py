@@ -12,13 +12,13 @@ from nose.twistedtools import reactor
 from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import deferLater
 
-from ..candidate import Candidate
-from ..dispersy import Dispersy
-from ..endpoint import StandaloneEndpoint
-from ..message import Message, DropMessage
-from ..util import blockingCallFromThread
-from .debugcommunity.community import DebugCommunity
-from .dispersytestclass import DispersyTestFunc
+from candidate import Candidate
+from dispersy import Dispersy
+from endpoint import StandaloneEndpoint
+from message import Message, DropMessage
+from util import blockingCallFromThread
+from tests.debugcommunity.community import DebugCommunity
+from tests.dispersytestclass import DispersyTestFunc
 
 
 summary_logger = logging.getLogger("test-bootstrap-summary")

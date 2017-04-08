@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from .dispersytestclass import DispersyTestFunc
+from tests.dispersytestclass import DispersyTestFunc
 
 
 class TestIncomingMissingSequence(DispersyTestFunc):

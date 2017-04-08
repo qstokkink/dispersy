@@ -1,4 +1,6 @@
-from ...payload import Payload
+from util import as_absolute_import
+
+Payload = as_absolute_import(__name__, __file__, 2, ["payload", ], ["Payload", ])
 
 
 class TextPayload(Payload):
