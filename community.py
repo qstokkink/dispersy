@@ -271,9 +271,6 @@ class Community(TaskManager):
 
         self._last_sync_time = 0
 
-        # batch caching incoming packets
-        self._batch_cache = {}
-
         # delayed list for incoming packet/messages which are delayed
         self._delayed_key = defaultdict(list)
 
@@ -1060,8 +1057,6 @@ class Community(TaskManager):
         """
         Unload a single community.
         """
-
-        self.purge_batch_cache()
 
         self.cancel_all_pending_tasks()
 
@@ -1984,7 +1979,7 @@ class Community(TaskManager):
                 self._statistics.increase_delay_msg_count(u"timeout")
                 self._statistics.increase_msg_count(u"drop", u"delay_timeout:%s" % delayed)
 
-    def on_incoming_packets(self, packets, cache=True, timestamp=0.0, source=u"unknown"):
+    def on_incoming_packets(self, packets, timestamp=0.0, source=u"unknown"):
         """
         Process incoming packets for this community.
         """
@@ -1994,7 +1989,6 @@ class Community(TaskManager):
         assert all(len(packet) == 2 for packet in packets), packets
         assert all(isinstance(packet[0], Candidate) for packet in packets), packets
         assert all(isinstance(packet[1], str) for packet in packets), packets
-        assert isinstance(cache, bool), cache
         assert isinstance(timestamp, float), timestamp
 
         self._logger.debug("got %d incoming packets", len(packets))
@@ -2008,18 +2002,7 @@ class Community(TaskManager):
                 meta = conversion.decode_meta_message(cur_packets[0][1])
                 batch = [(self.get_candidate(candidate.sock_addr) or candidate, packet, conversion, source)
                          for candidate, packet in cur_packets]
-                if meta.batch.enabled and cache:
-                    if meta in self._batch_cache:
-                        _, current_batch = self._batch_cache[meta]
-                        current_batch.extend(batch)
-                        self._logger.debug("adding %d %s messages to existing cache", len(batch), meta.name)
-                    else:
-                        self.register_task(meta, reactor.callLater(meta.batch.max_window, self._process_message_batch, meta))
-                        self._batch_cache[meta] = (timestamp, batch)
-                        self._logger.debug("new cache with %d %s messages (batch window: %d)",
-                                           len(batch), meta.name, meta.batch.max_window)
-                else:
-                    self._on_batch_cache(meta, batch)
+                self._on_batch_cache(meta, batch)
 
                 self._statistics.increase_total_received_count(len(cur_packets))
 
@@ -2030,24 +2013,6 @@ class Community(TaskManager):
                         len(packet), candidate)
                 self._statistics.increase_msg_count(
                     u"drop", u"convert_packets_into_batch:unknown conversion", len(cur_packets))
-
-    def _process_message_batch(self, meta):
-        """
-        Start processing a batch of messages.
-
-        This method is called meta.batch.max_window seconds after the first message in this batch arrived or when
-        flushing all the batches.  All messages in this batch have been 'cached' together in self._batch_cache[meta].
-        Hopefully the delay caused the batch to collect as many messages as possible.
-
-        """
-        assert isinstance(meta, Message)
-        assert meta in self._batch_cache
-
-        _, batch = self._batch_cache.pop(meta)
-        self.cancel_pending_task(meta)
-        self._logger.debug("processing %sx %s batched messages", len(batch), meta.name)
-
-        return self._on_batch_cache(meta, batch)
 
     def _on_batch_cache(self, meta, batch):
         """
@@ -2090,27 +2055,6 @@ class Community(TaskManager):
         # handle the incoming messages
         if messages:
             self.on_messages(messages)
-
-    def purge_batch_cache(self):
-        """
-        Remove all batches currently scheduled.
-        """
-        # remove any items that are left in the cache
-        for meta in self._batch_cache.iterkeys():
-            self.cancel_pending_task(meta)
-        self._batch_cache.clear()
-
-    def flush_batch_cache(self):
-        """
-        Process all pending batches with a sync distribution.
-        """
-        flush_list = [(meta, tup) for meta, tup in
-                      self._batch_cache.iteritems() if isinstance(meta.distribution, SyncDistribution)]
-
-        for meta, (_, batch) in flush_list:
-            self._logger.debug("flush cached %dx %s messages (dc: %s)",
-                               len(batch), meta.name, self._pending_tasks[meta])
-            self._process_message_batch(meta)
 
     def on_messages(self, messages):
         """
@@ -2672,7 +2616,6 @@ class Community(TaskManager):
 
         else:
             # flush any sync-able items left in the cache before we create a sync
-            self.flush_batch_cache()
             sync = self.dispersy_claim_sync_bloom_filter(cache)
             if __debug__:
                 assert sync is None or isinstance(sync, tuple), sync

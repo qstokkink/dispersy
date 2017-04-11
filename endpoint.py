@@ -210,7 +210,7 @@ class StandaloneEndpoint(Endpoint):
                         self._logger.debug('%d came in, %d bytes in total', len(packets), sum(len(packet) for _, packet in packets))
                         self.data_came_in(packets)
 
-    def data_came_in(self, packets, cache=True):
+    def data_came_in(self, packets):
         assert self._dispersy, "Should not be called before open(...)"
         assert isinstance(packets, (list, tuple)), type(packets)
 
@@ -231,9 +231,9 @@ class StandaloneEndpoint(Endpoint):
                     self.log_packet(sock_addr, data, outbound=False)
 
             # The endpoint runs on it's own thread, so we can't do a callLater here
-            reactor.callFromThread(self.dispersythread_data_came_in, normal_packets, time(), cache)
+            reactor.callFromThread(self.dispersythread_data_came_in, normal_packets, time())
 
-    def dispersythread_data_came_in(self, packets, timestamp, cache=True):
+    def dispersythread_data_came_in(self, packets, timestamp):
         assert self._dispersy, "Should not be called before open(...)"
 
         def strip_if_tunnel(packets):
@@ -248,7 +248,6 @@ class StandaloneEndpoint(Endpoint):
                                                 for tunnel, sock_addr, data
                                                 in strip_if_tunnel(packets)
                                                 if is_valid_address_or_log(sock_addr, data)],
-                                               cache,
                                                timestamp,
                                                u"standalone_ep")
         except AssertionError:
@@ -380,4 +379,4 @@ class ManualEnpoint(StandaloneEndpoint):
 
     def process_packets(self, packets, cache=True):
         self._logger.debug('processing %d packets', len(packets))
-        StandaloneEndpoint.data_came_in(self, packets, cache=cache)
+        StandaloneEndpoint.data_came_in(self, packets)

@@ -934,7 +934,7 @@ class Dispersy(TaskManager):
         assert all(isinstance(packet, str) for packet in packets), [type(packet) for packet in packets]
         return [self.convert_packet_to_message(packet, community, load, auto_load, candidate, verify) for packet in packets]
 
-    def on_incoming_packets(self, packets, cache=True, timestamp=0.0, source=u"unknown"):
+    def on_incoming_packets(self, packets, timestamp=0.0, source=u"unknown"):
         """
         Process incoming UDP packets.
 
@@ -960,7 +960,6 @@ class Dispersy(TaskManager):
         assert all(isinstance(packet[1], str) for packet in packets), packets
         assert all(len(packet[1]) > 22 for packet in packets), [
             (str(packet[0]), repr(packet[1])) for packet in packets]
-        assert isinstance(cache, bool), cache
         assert isinstance(timestamp, float), timestamp
         assert isinstance(source, unicode), source
 
@@ -976,7 +975,7 @@ class Dispersy(TaskManager):
                 # find associated community
                 try:
                     community = self.get_community(community_id)
-                    community.on_incoming_packets(list(iterator), cache, timestamp, source)
+                    community.on_incoming_packets(list(iterator), timestamp, source)
 
                 except CommunityNotFoundException:
                     packets = list(iterator)
