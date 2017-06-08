@@ -1,11 +1,18 @@
 from collections import defaultdict
 
+from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.task import deferLater
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestIncomingMissingSequence(DispersyTestFunc):
 
-    def incoming_simple_conflict_different_global_time(self):
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
+    def test_incoming_simple_conflict_different_global_time(self):
         """
         A broken NODE creates conflicting messages with the same sequence number that OTHER should
         properly filter.
@@ -16,7 +23,7 @@ class TestIncomingMissingSequence(DispersyTestFunc):
         - etc...
 
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         msgs = defaultdict(dict)
@@ -188,13 +195,15 @@ class TestIncomingMissingSequence(DispersyTestFunc):
     def test_requests_2_24(self):
         self.requests(2, [], (11, 11), (11, 50), (100, 200))
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def requests(self, node_count, expected_responses, *pairs):
         """
         NODE1 through NODE<NODE_COUNT> requests OTHER (non)overlapping sequences, OTHER should send back the requested messages
         only once.
         """
-        other, = self.create_nodes(1)
-        nodes = self.create_nodes(node_count)
+        other, = yield self.create_nodes(1)
+        nodes = yield self.create_nodes(node_count)
         for node in nodes:
             other.send_identity(node)
 
@@ -215,19 +224,24 @@ class TestIncomingMissingSequence(DispersyTestFunc):
 
         # receive response
         for node in nodes:
-            responses = [response.distribution.sequence_number for _, response in node.receive_messages(names=[u"sequence-text"], timeout=0.1)]
+            received_messages = yield node.receive_messages(names=[u"sequence-text"], timeout=0.1)
+            responses = [response.distribution.sequence_number for _, response in received_messages]
             self.assertEqual(len(responses), len(expected_responses))
 
             for seq, expected_seq in zip(responses, expected_responses):
                 self.assertEqual(seq, expected_seq)
 
+        yield deferLater(reactor, 0.1, lambda: None)
+
 class TestOutgoingMissingSequence(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_missing(self):
         """
         NODE sends message while OTHER doesn't have the prior sequence numbers, OTHER should request these messages.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         messages = [node.create_sequence_text("Sequence message #%d" % sequence, sequence + 10, sequence)
@@ -236,7 +250,7 @@ class TestOutgoingMissingSequence(DispersyTestFunc):
 
         # NODE gives #5, hence OTHER will request [#1:#4]
         other.give_message(messages[4], node)
-        requests = node.receive_messages(names=[u"dispersy-missing-sequence"])
+        requests = yield node.receive_messages(names=[u"dispersy-missing-sequence"])
         self.assertEqual(len(requests), 1)
 
         _, request = requests[0]
@@ -253,7 +267,7 @@ class TestOutgoingMissingSequence(DispersyTestFunc):
 
         # NODE gives #10, hence OTHER will request [#6:#9]
         other.give_message(messages[9], node)
-        requests = node.receive_messages(names=[u"dispersy-missing-sequence"])
+        requests = yield node.receive_messages(names=[u"dispersy-missing-sequence"])
         self.assertEqual(len(requests), 1)
 
         _, request = requests[0]

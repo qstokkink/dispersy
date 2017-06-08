@@ -100,7 +100,6 @@ class DispersyTestFunc(TestCase):
                 self._logger.error("Found rogue thread: %s", thread)
         self.assertFalse(rogue_threads, "Rogue threads active, see log")
 
-    @blocking_call_on_reactor_thread
     @inlineCallbacks
     def create_nodes(self, amount=1, store_identity=True, tunnel=False, community_class=DebugCommunity,
                      autoload_discovery=False, memory_database=True):

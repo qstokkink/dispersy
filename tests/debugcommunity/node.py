@@ -1,9 +1,9 @@
 import sys
-from time import time, sleep
+from time import time
 import logging
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import deferLater
 from twisted.python.threadable import isInIOThread
 
@@ -201,13 +201,23 @@ class DebugNode(object):
         """
         Process all packets on the nodes' socket.
         """
-        timeout = time() + timeout
-        while timeout > time():
+        def check_packets(f, done_deferred, timeout):
+            # Check if we have packets
             packets = self._dispersy.endpoint.process_receive_queue()
             if packets:
-                return packets
+                # If we have received some, return them and stop waiting
+                done_deferred.callback(packets)
+            elif timeout > 0.0:
+                # If we have no packets, but are still within our timeout
+                # Schedule ourselves again
+                reactor.callLater(0.1, f, f, done_deferred, timeout - 0.1)
             else:
-                sleep(0.1)
+                # Our timeout has passed, return None
+                done_deferred.callback(None)
+        # Intiate waiting for packets
+        done = Deferred()
+        reactor.callLater(0.1, check_packets, check_packets, done, timeout)
+        return done
 
     def drop_packets(self):
         """
@@ -246,7 +256,11 @@ class DebugNode(object):
                     self._logger.debug("%d bytes from %s", len(packet), candidate)
                     yield candidate, packet
             else:
-                sleep(0.001)
+                @blocking_call_on_reactor_thread
+                @inlineCallbacks
+                def wait():
+                    yield deferLater(reactor, 0.01, lambda: None)
+                wait()
 
     def receive_packets(self, addresses=None, timeout=0.5):
         return list(self.receive_packet(addresses, timeout))

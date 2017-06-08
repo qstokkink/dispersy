@@ -378,6 +378,11 @@ class ManualEnpoint(StandaloneEndpoint):
         self.process_packets(packets)
         return packets
 
-    def process_packets(self, packets, cache=True):
+    def process_packets(self, packets, cache=False):
         self._logger.debug('processing %d packets', len(packets))
-        StandaloneEndpoint.data_came_in(self, packets, cache=cache)
+
+        self._dispersy.statistics.total_down += sum(len(data) for _, data in packets)
+        if self._logger.isEnabledFor(logging.DEBUG):
+            for sock_addr, data in packets:
+                self.log_packet(sock_addr, data, outbound=False)
+        self.dispersythread_data_came_in(packets, time(), cache)

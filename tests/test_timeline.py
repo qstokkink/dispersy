@@ -1,14 +1,19 @@
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestTimeline(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_delay_by_proof(self):
         """
         When OTHER receives a message that it has no permission for, it will send a
         dispersy-missing-proof message to try to obtain the dispersy-authorize.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # permit NODE
@@ -23,7 +28,7 @@ class TestTimeline(DispersyTestFunc):
         other.assert_not_stored(tmessage)
 
         # OTHER sends dispersy-missing-proof to NODE
-        responses = node.receive_messages()
+        responses = yield node.receive_messages()
         self.assertEqual(len(responses), 1)
         for _, message in responses:
             self.assertEqual(message.name, u"dispersy-missing-proof")
@@ -36,11 +41,13 @@ class TestTimeline(DispersyTestFunc):
         # must have been stored in the database
         other.assert_is_stored(tmessage)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_missing_proof(self):
         """
         When OTHER receives a dispersy-missing-proof message it needs to find and send the proof.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # permit NODE
@@ -61,6 +68,8 @@ class TestTimeline(DispersyTestFunc):
         authorize_permission_triplets = [(triplet[0].mid, triplet[1].name, triplet[2]) for triplet in authorize.payload.permission_triplets]
         self.assertIn(permission_triplet, authorize_permission_triplets)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_missing_authorize_proof(self):
         """
              MASTER
@@ -74,7 +83,7 @@ class TestTimeline(DispersyTestFunc):
         When NODE receives a dispersy-missing-proof message from OTHER for authorize(MM, NODE)
         the dispersy-authorize message for authorize(MASTER, MM) must be returned.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # permit NODE

@@ -1,5 +1,7 @@
-from .dispersytestclass import DispersyTestFunc
+from twisted.internet.defer import inlineCallbacks
 
+from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 class TestPruning(DispersyTestFunc):
 
@@ -15,6 +17,8 @@ class TestPruning(DispersyTestFunc):
             node.store(messages)
         return messages
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_local_creation_causes_pruning(self):
         """
         NODE creates messages that should be properly pruned.
@@ -29,7 +33,7 @@ class TestPruning(DispersyTestFunc):
         self.assertEqual(meta.distribution.pruning.inactive_threshold, 10, "check message configuration")
         self.assertEqual(meta.distribution.pruning.prune_threshold, 20, "check message configuration")
 
-        node, = self.create_nodes(1)
+        node, = yield self.create_nodes(1)
 
         messages = self._create_prune(node, 11, 20)
         self.assertTrue(all(message.distribution.pruning.is_active() for message in messages), "all messages should be active")
@@ -53,6 +57,8 @@ class TestPruning(DispersyTestFunc):
         # pruned messages should no longer exist in the database
         node.assert_not_stored(messages=pruned)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_local_creation_of_other_messages_causes_pruning(self):
         """
         NODE creates messages that should be properly pruned.
@@ -66,7 +72,7 @@ class TestPruning(DispersyTestFunc):
         self.assertEqual(meta.distribution.pruning.inactive_threshold, 10, "check message configuration")
         self.assertEqual(meta.distribution.pruning.prune_threshold, 20, "check message configuration")
 
-        node, = self.create_nodes(1)
+        node, = yield self.create_nodes(1)
 
         # create 10 pruning messages
         messages = self._create_prune(node, 11, 20)
@@ -83,6 +89,8 @@ class TestPruning(DispersyTestFunc):
         # pruned messages should no longer exist in the database
         node.assert_not_stored(messages=messages)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_remote_creation_causes_pruning(self):
         """
         NODE creates messages that should cause pruning on OTHER
@@ -96,7 +104,7 @@ class TestPruning(DispersyTestFunc):
         self.assertEqual(meta.distribution.pruning.inactive_threshold, 10, "check message configuration")
         self.assertEqual(meta.distribution.pruning.prune_threshold, 20, "check message configuration")
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
 
         # create 10 pruning messages
         other.give_messages(self._create_prune(node, 11, 20, store=False), node)
@@ -129,6 +137,8 @@ class TestPruning(DispersyTestFunc):
         # pruned messages should no longer exist in the database
         other.assert_not_stored(messages=should_be_pruned)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_remote_creation_of_other_messages_causes_pruning(self):
         """
         NODE creates messages that should cause pruning on OTHER
@@ -142,7 +152,7 @@ class TestPruning(DispersyTestFunc):
         self.assertEqual(meta.distribution.pruning.inactive_threshold, 10, "check message configuration")
         self.assertEqual(meta.distribution.pruning.prune_threshold, 20, "check message configuration")
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
 
         # create 10 pruning messages
         messages = self._create_prune(node, 11, 20, store=False)
@@ -166,6 +176,8 @@ class TestPruning(DispersyTestFunc):
         # pruned messages should no longer exist in the database
         other.assert_not_stored(messages=messages)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_sync_response_response_filtering_inactive(self):
         """
         Testing the bloom filter sync.
@@ -182,7 +194,7 @@ class TestPruning(DispersyTestFunc):
         self.assertEqual(meta.distribution.pruning.inactive_threshold, 10, "check message configuration")
         self.assertEqual(meta.distribution.pruning.prune_threshold, 20, "check message configuration")
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         # OTHER creates 20 messages
@@ -196,7 +208,8 @@ class TestPruning(DispersyTestFunc):
         other.give_message(node.create_introduction_request(other.my_candidate, node.lan_address, node.wan_address, False, u"unknown", sync, 42, global_time), node)
 
         # OTHER should return the 10 active messages
-        responses = [response for _, response in node.receive_messages(names=[u"full-sync-global-time-pruning-text"])]
+        received_messages = yield node.receive_messages(names=[u"full-sync-global-time-pruning-text"])
+        responses = [response for _, response in received_messages]
         self.assertEqual(len(responses), 10)
         self.assertTrue(all(message.packet == response.packet for message, response in zip(messages[10:20], responses)))
 
@@ -212,6 +225,7 @@ class TestPruning(DispersyTestFunc):
         other.give_message(node.create_introduction_request(other.my_candidate, node.lan_address, node.wan_address, False, u"unknown", sync, 42, global_time), node)
 
         # OTHER should return the 5 active pruning messages
-        responses = [response for _, response in node.receive_messages(names=[u"full-sync-global-time-pruning-text"])]
+        received_messages = yield node.receive_messages(names=[u"full-sync-global-time-pruning-text"])
+        responses = [response for _, response in received_messages]
         self.assertEqual(len(responses), 5)
         self.assertTrue(all(message.packet == response.packet for message, response in zip(messages[15:20], responses)))

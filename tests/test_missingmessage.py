@@ -1,15 +1,20 @@
 from random import shuffle
 
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestMissingMessage(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def _test_with_order(self, batchFUNC):
         """
         NODE generates a few messages and OTHER requests them one at a time.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # create messages
@@ -24,7 +29,8 @@ class TestMissingMessage(DispersyTestFunc):
             node.give_message(other.create_missing_message(node.my_member, global_times), other)
 
             # receive response
-            responses = [response for _, response in other.receive_messages(names=[message.name])]
+            received_messages = yield other.receive_messages(names=[messages[0].name])
+            responses = [response for _, response in received_messages]
             self.assertEqual(sorted(response.distribution.global_time for response in responses), global_times)
 
     def test_single_request(self):

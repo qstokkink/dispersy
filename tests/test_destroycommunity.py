@@ -1,8 +1,13 @@
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestDestroyCommunity(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_hard_kill(self):
         """
         Test that a community can be hard killed and their messages will be dropped from the DB.
@@ -11,7 +16,7 @@ class TestDestroyCommunity(DispersyTestFunc):
         3. MM destroys the community.
         4. Node wipes all messages from the community in the database.
         """
-        node, = self.create_nodes(1)
+        node, = yield self.create_nodes(1)
 
         message = node.create_full_sync_text("Should be removed", 42)
         node.give_message(message, node)
@@ -24,8 +29,10 @@ class TestDestroyCommunity(DispersyTestFunc):
 
         node.assert_count(message, 0)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_hard_kill_without_permission(self):
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         message = node.create_full_sync_text("Should not be removed", 42)

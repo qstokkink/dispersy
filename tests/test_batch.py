@@ -1,6 +1,11 @@
-from time import time, sleep
+from time import time
+
+from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.task import deferLater
 
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestBatch(DispersyTestFunc):
@@ -10,8 +15,10 @@ class TestBatch(DispersyTestFunc):
         self._big_batch_took = 0.0
         self._small_batches_took = 0.0
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_one_batch(self):
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         messages = [node.create_batched_text("duplicates", i + 10) for i in range(10)]
@@ -20,13 +27,15 @@ class TestBatch(DispersyTestFunc):
         # no messages may be in the database, as they need to be batched
         other.assert_count(messages[0], 0)
 
-        sleep(messages[0].meta.batch.max_window + 1.0)
+        yield deferLater(reactor, messages[0].meta.batch.max_window + 1.0, lambda: None)
 
         # all of the messages must be stored in the database, as batch_window expired
         other.assert_count(messages[0], 10)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_multiple_batch(self):
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         messages = [node.create_batched_text("duplicates", i + 10) for i in range(10)]
@@ -36,11 +45,13 @@ class TestBatch(DispersyTestFunc):
             # no messages may be in the database, as they need to be batched
             other.assert_count(message, 0)
 
-        sleep(messages[0].meta.batch.max_window + 1.0)
+        yield deferLater(reactor, messages[0].meta.batch.max_window + 1.0, lambda: None)
 
         # all of the messages must be stored in the database, as batch_window expired
         other.assert_count(messages[0], 10)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_one_big_batch(self, length=1000):
         """
         Test that one big batch of messages is processed correctly.
@@ -48,7 +59,7 @@ class TestBatch(DispersyTestFunc):
         we make one large batch (using one community) and many small batches (using many different
         communities).
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         messages = [node.create_full_sync_text("Dprint=False, big batch #%d" % global_time, global_time)
@@ -64,6 +75,8 @@ class TestBatch(DispersyTestFunc):
         if self._big_batch_took and self._small_batches_took:
             self.assertSmaller(self._big_batch_took, self._small_batches_took * 1.1)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_many_small_batches(self, length=1000):
         """
         Test that many small batches of messages are processed correctly.
@@ -71,7 +84,7 @@ class TestBatch(DispersyTestFunc):
         we make one large batch (using one community) and many small batches (using many different
         communities).
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         messages = [node.create_full_sync_text("Dprint=False, big batch #%d" % global_time, global_time)

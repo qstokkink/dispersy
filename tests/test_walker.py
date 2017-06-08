@@ -1,4 +1,7 @@
+from twisted.internet.defer import inlineCallbacks, returnValue
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestWalker(DispersyTestFunc):
@@ -14,16 +17,18 @@ class TestWalker(DispersyTestFunc):
     def test_two_mixed_walker_b(self): return self.check_walker(["t", ""])
     def test_many_mixed_walker_b(self): return self.check_walker(["t", ""] * 11)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def create_others(self, all_flags):
         assert isinstance(all_flags, list)
         assert all(isinstance(flags, str) for flags in all_flags)
 
         nodes = []
         for flags in all_flags:
-            node, = self.create_nodes(tunnel="t" in flags)
+            node, = yield self.create_nodes(tunnel="t" in flags)
             nodes.append(node)
 
-        return nodes
+        returnValue(nodes)
 
     def check_walker(self, all_flags):
         """

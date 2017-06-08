@@ -1,5 +1,10 @@
+from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.task import deferLater
+
 from .debugcommunity.community import DebugCommunity
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestNeighborhood(DispersyTestFunc):
@@ -31,6 +36,8 @@ class TestNeighborhood(DispersyTestFunc):
     def test_forward_2_targeted_5(self):
         return self.forward(2, 5)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def forward(self, non_targeted_node_count, targeted_node_count=0):
         """
         SELF should forward created messages at least to the specified targets.
@@ -59,7 +66,7 @@ class TestNeighborhood(DispersyTestFunc):
         total_node_count = non_targeted_node_count + targeted_node_count
 
         # provide CENTRAL with a neighborhood
-        nodes = self.create_nodes(total_node_count)
+        nodes = yield self.create_nodes(total_node_count)
 
         # SELF creates a message
         candidates = tuple((node.my_candidate for node in nodes[:targeted_node_count]))
@@ -69,7 +76,8 @@ class TestNeighborhood(DispersyTestFunc):
         # check if sufficient NODES received the message (at least the first `target_count` ones)
         forwarded_node_count = 0
         for node in nodes:
-            forwarded = [m for _, m in node.receive_messages(names=[u"full-sync-text"], timeout=0.1)]
+            received_messages = yield node.receive_messages(names=[u"full-sync-text"], timeout=0.1)
+            forwarded = [m for _, m in received_messages]
             if node in nodes[:targeted_node_count]:
                 # They MUST have received the message
                 self.assertEqual(len(forwarded), 1)
@@ -83,3 +91,5 @@ class TestNeighborhood(DispersyTestFunc):
 
         # We should never send to more than node_count + targeted_node_count nodes
         self.assertEqual(forwarded_node_count, min(total_node_count, meta.destination.node_count + targeted_node_count))
+
+        yield deferLater(reactor, 0.1, lambda: None)

@@ -201,7 +201,7 @@ class TestBootstrapServers(DispersyTestFunc):
             packet = node.fetch_packets([u"dispersy-identity", ], node.my_member.mid)[0]
             node.send_packet(packet, destination)
 
-            node.process_packets()
+            yield node.process_packets()
 
             _, message = node.receive_message(names=[u"dispersy-identity"]).next()
 

@@ -1,14 +1,19 @@
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestIdenticalPayload(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_drop_identical_payload(self):
         """
         NODE creates two messages with the same community/member/global-time.
         Sends both of them to OTHER, which should drop the "lowest" one.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         # create messages
@@ -27,11 +32,13 @@ class TestIdenticalPayload(DispersyTestFunc):
         other.assert_not_stored(messages[0])
         other.assert_is_stored(messages[1])
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_drop_identical(self):
         """
         NODE creates one message, sends it to OTHER twice
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         # create messages

@@ -1,8 +1,12 @@
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestUndo(DispersyTestFunc):
-
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_self_undo_own(self):
         """
         NODE generates a few messages and then undoes them.
@@ -10,7 +14,7 @@ class TestUndo(DispersyTestFunc):
         This is always allowed.  In fact, no check is made since only externally received packets
         will be checked.
         """
-        node, = self.create_nodes(1)
+        node, = yield self.create_nodes(1)
 
         # create messages
         messages = [node.create_full_sync_text("Should undo #%d" % i, i + 10) for i in xrange(10)]
@@ -28,12 +32,14 @@ class TestUndo(DispersyTestFunc):
         node.assert_is_undone(messages=messages)
         node.assert_is_stored(messages=undoes)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_node_undo_other(self):
         """
         MM gives NODE permission to undo, OTHER generates a few messages and then NODE undoes
         them.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         # MM grants undo permission to NODE
@@ -56,12 +62,14 @@ class TestUndo(DispersyTestFunc):
         node.assert_is_undone(messages=messages)
         node.assert_is_stored(messages=undoes)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_self_attempt_undo_twice(self):
         """
         NODE generated a message and then undoes it twice. The dispersy core should ensure that
         that the second undo is refused and the first undo message should be returned instead.
         """
-        node, = self.create_nodes(1)
+        node, = yield self.create_nodes(1)
 
         # create message
         message = node.create_full_sync_text("Should undo @%d" % 1, 1)
@@ -74,6 +82,8 @@ class TestUndo(DispersyTestFunc):
 
         self.assertEqual(undo1.packet, undo2.packet)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_node_resolve_undo_twice(self):
         """
         Make sure that in the event of receiving two undo messages from the same member, both will be stored,
@@ -83,7 +93,7 @@ class TestUndo(DispersyTestFunc):
         Both messages should be kept and the lowest one should be undone.
 
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # MM grants undo permission to NODE
@@ -135,6 +145,8 @@ class TestUndo(DispersyTestFunc):
         other.assert_is_undone(high_message, undone_by=low_message)
         other.assert_is_undone(message, undone_by=low_message)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_missing_message(self):
         """
         NODE generates a few messages without sending them to OTHER. Following, NODE undoes the
@@ -142,7 +154,7 @@ class TestUndo(DispersyTestFunc):
         to request the messages that are about to be undone. The messages need to be processed and
         subsequently undone.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # create messages
@@ -158,7 +170,8 @@ class TestUndo(DispersyTestFunc):
         global_times = [message.distribution.global_time for message in messages]
         global_time_requests = []
 
-        for _, message in node.receive_messages(names=[u"dispersy-missing-message"]):
+        received_messages = yield node.receive_messages(names=[u"dispersy-missing-message"])
+        for _, message in received_messages:
             self.assertEqual(message.payload.member.public_key, node.my_member.public_key)
             global_time_requests.extend(message.payload.global_times)
 
@@ -171,12 +184,14 @@ class TestUndo(DispersyTestFunc):
         other.assert_is_undone(messages=messages)
         other.assert_is_stored(messages=undoes)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_revoke_causing_undo(self):
         """
         SELF gives NODE permission to undo, OTHER created a message, NODE undoes the message, SELF
         revokes the undo permission AFTER the message was undone -> the message is re-done.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # MM grants undo permission to NODE
@@ -200,12 +215,14 @@ class TestUndo(DispersyTestFunc):
         other.give_message(revoke, self._mm)
         other.assert_is_done(message)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_revoke_causing_undo_permitted(self):
         """
         SELF gives NODE permission to undo, OTHER created a message, NODE undoes the message, SELF
         revokes the undo permission AFTER the message was undone -> the message is re-done.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         # MM grants permit permission to OTHER

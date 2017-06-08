@@ -1,14 +1,19 @@
+from twisted.internet.defer import inlineCallbacks
+
 from ..resolution import PublicResolution, LinearResolution
+from ..util import blocking_call_on_reactor_thread
 from .dispersytestclass import DispersyTestFunc
 
 
 class TestDynamicSettings(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_default_resolution(self):
         """
         Ensure that the default resolution policy is used first.
         """
-        other, = self.create_nodes(1)
+        other, = yield self.create_nodes(1)
 
         meta = self._community.get_meta_message(u"dynamic-resolution-text")
 
@@ -23,11 +28,13 @@ class TestDynamicSettings(DispersyTestFunc):
 
         other.assert_is_stored(message)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_change_resolution(self):
         """
         Change the resolution policy from default to linear.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         meta = node._community.get_meta_message(u"dynamic-resolution-text")
@@ -62,6 +69,8 @@ class TestDynamicSettings(DispersyTestFunc):
         other.give_message(message, node)
         other.assert_not_stored(message)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_change_resolution_undo(self):
         """
         Change the resolution policy from default to linear, the messages already accepted should be
@@ -72,7 +81,7 @@ class TestDynamicSettings(DispersyTestFunc):
                 policy, _ = other.get_resolution_policy(meta, global_time)
                 self.assertIsInstance(policy, policyclass)
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         meta = self._community.get_meta_message(u"dynamic-resolution-text")
@@ -113,6 +122,8 @@ class TestDynamicSettings(DispersyTestFunc):
         # policy change should have redone the tmessage
         other.assert_is_done(tmessage)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_change_resolution_reject(self):
         """
         Change the resolution policy from default to linear and back, to see if other requests the proof
@@ -122,7 +133,7 @@ class TestDynamicSettings(DispersyTestFunc):
                 policy, _ = other.get_resolution_policy(meta, global_time)
                 self.assertIsInstance(policy, policyclass)
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         meta = self._community.get_meta_message(u"dynamic-resolution-text")
@@ -153,6 +164,8 @@ class TestDynamicSettings(DispersyTestFunc):
         other.give_message(policy_public, self._mm)
         other.assert_is_done(tmessage)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_change_resolution_send_proof(self):
         """
         Change the resolution policy from default to linear and back, to see if other sends the proofs
@@ -162,7 +175,7 @@ class TestDynamicSettings(DispersyTestFunc):
                 policy, _ = other.get_resolution_policy(meta, global_time)
                 self.assertIsInstance(policy, policyclass)
 
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         meta = self._community.get_meta_message(u"dynamic-resolution-text")

@@ -1,7 +1,9 @@
 from time import time
 
+from twisted.internet.defer import inlineCallbacks
+
 from .dispersytestclass import DispersyTestFunc
-from ..util import call_on_reactor_thread, address_is_lan_without_netifaces
+from ..util import blocking_call_on_reactor_thread, call_on_reactor_thread, address_is_lan_without_netifaces
 
 class TestNATDetection(DispersyTestFunc):
 
@@ -123,6 +125,8 @@ class TestAddressEstimation(DispersyTestFunc):
         self.assertFalse(address_is_lan_without_netifaces("123.123.123.123"))
         self.assertFalse(address_is_lan_without_netifaces("42.42.42.42"))
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_estimate_addresses_within_LAN(self):
         """
         Tests the estimate_lan_and_wan_addresses method while NODE and OTHER are within the same LAN.
@@ -131,7 +135,7 @@ class TestAddressEstimation(DispersyTestFunc):
         correct LAN address.  OTHER will not be able to determine the WAN address for NODE, hence
         this should remain unchanged.
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         node.send_identity(other)
 
         incorrect_LAN = ("0.0.0.0", 0)
@@ -149,7 +153,7 @@ class TestAddressEstimation(DispersyTestFunc):
                            node)
 
         # NODE should receive an introduction-response with the corrected LAN address
-        responses = node.receive_messages(names=[u"dispersy-introduction-response"])
+        responses = yield node.receive_messages(names=[u"dispersy-introduction-response"])
         self.assertEqual(len(responses), 1)
         for _, response in responses:
             self.assertEqual(response.payload.destination_address, node.lan_address)

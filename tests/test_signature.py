@@ -1,16 +1,19 @@
-from time import sleep
+from twisted.internet.defer import inlineCallbacks
 
 from .dispersytestclass import DispersyTestFunc
+from ..util import blocking_call_on_reactor_thread
 
 
 class TestSignature(DispersyTestFunc):
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_invalid_public_key(self):
         """
         NODE sends a message containing an invalid public-key to OTHER.
         OTHER should drop it
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         message = node.create_bin_key_text('Should drop')
@@ -28,12 +31,14 @@ class TestSignature(DispersyTestFunc):
 
         self.assertEqual(other.fetch_messages([u"bin-key-text", ]), [])
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def test_invalid_signature(self):
         """
         NODE sends a message containing an invalid signature to OTHER.
         OTHER should drop it
         """
-        node, other = self.create_nodes(2)
+        node, other = yield self.create_nodes(2)
         other.send_identity(node)
 
         message = node.create_full_sync_text('Should drop')
