@@ -197,6 +197,8 @@ class DebugNode(object):
 
         return self.send_packet(message.packet, candidate)
 
+    @blocking_call_on_reactor_thread
+    @inlineCallbacks
     def process_packets(self, timeout=1.0):
         """
         Process all packets on the nodes' socket.
@@ -205,9 +207,9 @@ class DebugNode(object):
         while timeout > time():
             packets = self._dispersy.endpoint.process_receive_queue()
             if packets:
-                return packets
+                returnValue(packets)
             else:
-                sleep(0.1)
+                yield deferLater(reactor, 0.1, lambda: None)
 
     def drop_packets(self):
         """
@@ -246,7 +248,7 @@ class DebugNode(object):
                     self._logger.debug("%d bytes from %s", len(packet), candidate)
                     yield candidate, packet
             else:
-                sleep(0.001)
+                sleep(0.01)
 
     def receive_packets(self, addresses=None, timeout=0.5):
         return list(self.receive_packet(addresses, timeout))
@@ -293,7 +295,7 @@ class DebugNode(object):
                 break
             else:
                 # Wait for a bit and try again
-                yield deferLater(reactor, 0.005, lambda : None)
+                yield deferLater(reactor, 0.05, lambda: None)
 
         returnValue(messages)
 
